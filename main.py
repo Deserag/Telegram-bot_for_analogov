@@ -38,11 +38,13 @@ def first_zapusk(message):
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
+    i, j = 5, 10
     if message.text.lower() == "поиск аналогов" or message.text.lower() == "Поиск аналогов":
         bot.send_message(message.chat.id, "Введите название игры")
         bot.register_next_step_handler(message, process_search)
+    elif message.text.lower() == "предложения" or message.text.lower() == "Предложения":
         # Выполнение SQL-запроса
-        cursor.execute("SELECT * FROM game")
+        cursor.execute("SELECT * FROM predlozenia")
         rows = cursor.fetchall()
         if len(rows) == 0:
             bot.send_message(message.chat.id, "Пока нет предложений")
@@ -50,16 +52,8 @@ def handle_message(message):
             for row in rows:
                 message_text = "\n".join(str(cell) for cell in row)
                 bot.send_message(message.chat.id, message_text)
-    elif message.text.lower() == "предложения":
-        # Выполнение SQL-запроса
-        cursor.execute("SELECT * FROM game")
-        rows = cursor.fetchall()
-        if len(rows) == 0:
-            bot.send_message(message.chat.id, "Пока нет предложений")
-        else:
-            for row in rows:
-                message_text = "\n".join(str(cell) for cell in row)
-                bot.send_message(message.chat.id, message_text)
+    elif message.text.lower() == "Назад" or message.text.lower() == "назад":
+        menu(message)
     elif message.text.lower() == "изменить поиск" or message.text.lower() == "Изменить поиск":
         bot.send_message(message.chat.id, "Введите новое название")
     elif message.text.lower() == "найти больше" or message.text.lower() == "найти больше":
@@ -69,17 +63,28 @@ def handle_message(message):
         if len(rows) == 0:
             bot.send_message(message.chat.id, "Пока нет предложений")
         else:
-            for row in rows:
-                message_text = "\n".join(str(cell) for cell in row)
-                bot.send_message(message.chat.id, message_text)
-    elif message.text.lower() == "назад":
-        menu(message)
+            rows = rows[i:j]  # Получение значений с 6-10
+            if len(rows) == 0:
+                bot.send_message(message.chat.id, "Больше результатов нет")
+            else:
+                for row in rows:
+                    message_text = "\n".join(str(cell) for cell in row)
+                    bot.send_message(message.chat.id, message_text)
+                i += 5
+                j += 5
 
 
 def process_search(message):
-    # Здесь можно выполнить поиск аналогов игры на основе введенного запроса
-    # и отправить результаты пользователю
     bot.send_message(message.chat.id, "Результаты поиска аналогов игры")
+    # Выполнение SQL-запроса
+    cursor.execute("SELECT * FROM game")
+    rows = cursor.fetchmany(5)  # Получение только первых 5 результатов
+    if len(rows) == 0:
+        bot.send_message(message.chat.id, "Пока нет предложений")
+    else:
+        for row in rows:
+            message_text = "\n".join(str(cell) for cell in row)
+            bot.send_message(message.chat.id, message_text)
 
     # После отправки результатов поиска, вызовите функцию menu для изменения меню
     search_menu(message)
@@ -106,11 +111,6 @@ def search_menu(message):
                                       "Для изменения поиска нажмите на кнопку Изменить поиск\n"
                                       "Для поиска большего количества нажмите на кнопку Найти больше\n",
                      reply_markup=markup)
-
-
-@bot.message_handler(func=lambda message: message.text.lower() == "назад")
-def handle_back(message):
-    menu(message)
 
 
 bot.polling()
