@@ -14,7 +14,7 @@ conn = psycopg2.connect(
 
 # Создание курсора
 cursor = conn.cursor()
-bot = telebot.TeleBot("6800569429:AAH5aWH8molv8lLJA7u74MzWXKMgjNB6EN4")
+bot = telebot.TeleBot("*******")
 
 
 @bot.message_handler(commands=["start", "Start", "Старт", "старт"])
